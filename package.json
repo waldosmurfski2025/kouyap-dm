@@ -1,10 +1,12 @@
+
 {
   "name": "kouyap-dm",
   "version": "1.0.0",
-  "description": "",
+  "description": "Kouyap-DM — Your dedicated simplified ordinary third-party issues forum",
   "main": "index.md",
   "scripts": {
-   "start": "eleventy --serve"
+    "start": "eleventy --serve",
+    "build": "eleventy"
   },
   "keywords": [],
   "author": "",
