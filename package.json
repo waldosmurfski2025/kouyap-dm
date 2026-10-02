@@ -2,7 +2,7 @@
   "name": "kouyap-dm",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index.md",
   "scripts": {
    "start": "eleventy --serve"
   },
