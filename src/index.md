@@ -1,6 +1,6 @@
 ---
 title: Kouyap-DM
-layout: false
+layout: layout.njk
 permalink: index.html
 ---
 

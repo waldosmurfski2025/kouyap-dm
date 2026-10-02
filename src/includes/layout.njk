@@ -1,0 +1,593 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#232428">
+  <title>{{ title or "Kouyap-DM" }}</title>
+
+  <style>
+    :root {
+      --bg: #313338;
+      --sidebar: #2b2d31;
+      --servers: #1e1f22;
+      --panel: #383a40;
+      --hover: #404249;
+      --text: #f2f3f5;
+      --muted: #b5bac1;
+      --accent: #5865f2;
+      --border: #232428;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+
+    .app {
+      display: grid;
+      grid-template-columns: 72px 240px 220px minmax(0, 1fr);
+      height: 100vh;
+    }
+
+    .servers {
+      background: var(--servers);
+      padding: 12px 0;
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .server-icon {
+      border: 0;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--panel);
+      color: var(--text);
+      font-size: 22px;
+      transition: .15s;
+    }
+
+    .server-icon:hover,
+    .server-icon.active {
+      border-radius: 16px;
+      background: var(--accent);
+    }
+
+    .server-divider {
+      width: 32px;
+      border-top: 2px solid var(--panel);
+    }
+
+    .sidebar, .topics {
+      background: var(--sidebar);
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar { border-right: 1px solid var(--border); }
+    .topics { border-right: 1px solid var(--border); }
+
+    .sidebar-header, .topic-header {
+      height: 60px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 700;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-header {
+      box-shadow: 0 2px 6px #0002;
+    }
+
+    .section-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 750;
+      text-transform: uppercase;
+      margin: 22px 12px 8px;
+    }
+
+    .group-list, .topic-list {
+      padding: 0 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      width: 100%;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--muted);
+      padding: 9px;
+      text-align: left;
+      margin-bottom: 3px;
+    }
+
+    .nav-item:hover {
+      background: var(--hover);
+      color: var(--text);
+    }
+
+    .nav-item.active {
+      background: #404249;
+      color: white;
+    }
+
+    .nav-icon { width: 22px; text-align: center; }
+
+    .create-button {
+      margin: 10px 8px;
+      padding: 10px;
+      border: 0;
+      border-radius: 6px;
+      background: var(--accent);
+      color: white;
+      font-weight: 650;
+    }
+
+    .create-button:hover { filter: brightness(1.12); }
+
+    .user-panel {
+      margin-top: auto;
+      padding: 12px;
+      background: #232428;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+    }
+
+    .avatar {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      background: #5865f2;
+      color: white;
+      font-weight: 750;
+    }
+
+    .user-name { font-size: 13px; font-weight: 700; }
+    .user-status { color: var(--muted); font-size: 11px; }
+
+    .main {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    .chat-header {
+      height: 60px;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 2px 6px #0002;
+    }
+
+    .chat-header h1 { font-size: 16px; margin: 0; }
+    .chat-header .hash { font-size: 25px; color: var(--muted); }
+
+    .header-subtitle {
+      margin-left: auto;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .messages {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 22px 24px;
+    }
+
+    .welcome {
+      margin: 0 0 26px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #ffffff12;
+    }
+
+    .welcome h2 { font-size: 25px; margin: 0 0 8px; }
+    .welcome p { color: var(--muted); margin: 0; }
+
+    .message {
+      display: flex;
+      gap: 12px;
+      margin: 22px 0;
+    }
+
+    .message-body { min-width: 0; }
+    .message-meta { margin-bottom: 5px; }
+    .message-author { font-size: 14px; font-weight: 700; }
+    .message-time { font-size: 11px; color: var(--muted); margin-left: 7px; }
+    .message-text { font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; }
+
+    .composer {
+      padding: 0 20px 22px;
+      flex-shrink: 0;
+    }
+
+    .composer form {
+      display: flex;
+      gap: 10px;
+      padding: 8px;
+      border-radius: 9px;
+      background: #383a40;
+    }
+
+    .composer input {
+      flex: 1;
+      min-width: 0;
+      border: 0;
+      outline: 0;
+      color: white;
+      background: transparent;
+      padding: 8px;
+    }
+
+    .send-button {
+      border: 0;
+      border-radius: 6px;
+      padding: 8px 15px;
+      background: var(--accent);
+      color: white;
+    }
+
+    .send-button:hover { filter: brightness(1.12); }
+
+    .mobile-menu { display: none; }
+
+    @media (max-width: 1000px) {
+      .app { grid-template-columns: 64px 210px minmax(0, 1fr); }
+      .topics { display: none; }
+    }
+
+    @media (max-width: 600px) {
+      .app { grid-template-columns: 56px minmax(0, 1fr); }
+      .sidebar {
+        display: none;
+        position: absolute;
+        left: 56px;
+        top: 0;
+        bottom: 0;
+        width: 240px;
+        z-index: 5;
+        box-shadow: 8px 0 20px #0005;
+      }
+      .sidebar.open { display: flex; }
+      .mobile-menu { display: inline-block; }
+      .messages { padding: 18px 14px; }
+      .composer { padding: 0 12px 14px; }
+      .header-subtitle { display: none; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <aside class="servers">
+      <button class="server-icon active" title="Home">K</button>
+      <div class="server-divider"></div>
+      <button class="server-icon" title="General group">🌐</button>
+      <button class="server-icon" title="Study group">📚</button>
+      <button class="server-icon" title="Personal group">💬</button>
+      <button class="server-icon" id="addServer" title="Create a group">+</button>
+    </aside>
+
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span>Kouyap-DM</span>
+        <span>⌄</span>
+      </div>
+
+      <div class="section-label">Your groups</div>
+      <div class="group-list" id="groupList">
+        <button class="nav-item active" data-group="General">
+          <span class="nav-icon">🌐</span> General
+        </button>
+        <button class="nav-item" data-group="Study Hall">
+          <span class="nav-icon">📚</span> Study Hall
+        </button>
+        <button class="nav-item" data-group="Personal">
+          <span class="nav-icon">💬</span> Personal
+        </button>
+      </div>
+
+      <button class="create-button" id="createGroup">＋ Create a group</button>
+
+      <div class="user-panel">
+        <div class="avatar">K</div>
+        <div>
+          <div class="user-name">Guest User</div>
+          <div class="user-status">Local prototype</div>
+        </div>
+      </div>
+    </aside>
+
+    <aside class="topics">
+      <div class="topic-header">
+        <span id="topicGroupName">General</span>
+        <span>⌄</span>
+      </div>
+
+      <div class="section-label">Discussion topics</div>
+      <div class="topic-list" id="topicList">
+        <button class="nav-item active" data-topic="welcome">
+          <span class="nav-icon">#</span> welcome
+        </button>
+        <button class="nav-item" data-topic="suggestions">
+          <span class="nav-icon">#</span> suggestions
+        </button>
+        <button class="nav-item" data-topic="complaints">
+          <span class="nav-icon">#</span> complaints
+        </button>
+      </div>
+
+      <button class="create-button" id="createTopic">＋ New topic</button>
+    </aside>
+
+    <main class="main">
+      <header class="chat-header">
+        <button class="server-icon mobile-menu" id="mobileMenu">☰</button>
+        <span class="hash">#</span>
+        <h1 id="currentTopic">welcome</h1>
+        <span class="header-subtitle">Your groups. Your topics. Your conversations.</span>
+      </header>
+
+      <section class="messages" id="messages">
+        <div class="welcome">
+          <h2>Welcome to Kouyap-DM!</h2>
+          <p>This is the beginning of the #welcome discussion.</p>
+        </div>
+
+        <div class="message">
+          <div class="avatar">K</div>
+          <div class="message-body">
+            <div class="message-meta">
+              <span class="message-author">Kouyap Guide</span>
+              <span class="message-time">Today</span>
+            </div>
+            <div class="message-text">
+              Welcome! Create groups, organize your discussions into topics,
+              and use each topic to keep conversations focused.
+              <br><br>
+              This is sample content. Messages are currently stored only
+              in this browser session and are not shared with other users.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="composer">
+        <form id="messageForm">
+          <input
+            id="messageInput"
+            type="text"
+            maxlength="2000"
+            placeholder="Message #welcome"
+            autocomplete="off"
+            aria-label="Write a message"
+            required
+          >
+          <button class="send-button" type="submit">Send</button>
+        </form>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    const groups = {
+      General: {
+        welcome: [
+          {
+            author: "Kouyap Guide",
+            text: "Welcome! Start a conversation here."
+          }
+        ],
+        suggestions: [],
+        complaints: []
+      },
+      "Study Hall": {
+        homework: [],
+        questions: []
+      },
+      Personal: {
+        thoughts: [],
+        "daily-chat": []
+      }
+    };
+
+    let currentGroup = "General";
+    let currentTopic = "welcome";
+
+    const groupList = document.getElementById("groupList");
+    const topicList = document.getElementById("topicList");
+    const messages = document.getElementById("messages");
+    const messageInput = document.getElementById("messageInput");
+
+    function renderGroups() {
+      groupList.replaceChildren();
+
+      Object.keys(groups).forEach(group => {
+        const button = document.createElement("button");
+        button.className =
+          "nav-item" + (group === currentGroup ? " active" : "");
+        button.innerHTML =
+          '<span class="nav-icon">🌐</span>';
+        button.append(document.createTextNode(" " + group));
+        button.addEventListener("click", () => selectGroup(group));
+        groupList.append(button);
+      });
+    }
+
+    function renderTopics() {
+      topicList.replaceChildren();
+
+      Object.keys(groups[currentGroup]).forEach(topic => {
+        const button = document.createElement("button");
+        button.className =
+          "nav-item" + (topic === currentTopic ? " active" : "");
+        button.innerHTML = '<span class="nav-icon">#</span>';
+        button.append(document.createTextNode(" " + topic));
+        button.addEventListener("click", () => selectTopic(topic));
+        topicList.append(button);
+      });
+
+      document.getElementById("topicGroupName").textContent = currentGroup;
+    }
+
+    function renderMessages() {
+      messages.replaceChildren();
+
+      const welcome = document.createElement("div");
+      welcome.className = "welcome";
+
+      const heading = document.createElement("h2");
+      heading.textContent = "# " + currentTopic;
+
+      const description = document.createElement("p");
+      description.textContent =
+        "Discussion in " + currentGroup + ".";
+
+      welcome.append(heading, description);
+      messages.append(welcome);
+
+      groups[currentGroup][currentTopic].forEach(message => {
+        const row = document.createElement("div");
+        row.className = "message";
+
+        const avatar = document.createElement("div");
+        avatar.className = "avatar";
+        avatar.textContent = message.author.charAt(0).toUpperCase();
+
+        const body = document.createElement("div");
+        body.className = "message-body";
+
+        const meta = document.createElement("div");
+        meta.className = "message-meta";
+
+        const author = document.createElement("span");
+        author.className = "message-author";
+        author.textContent = message.author;
+
+        const time = document.createElement("span");
+        time.className = "message-time";
+        time.textContent = message.time || "Just now";
+
+        const text = document.createElement("div");
+        text.className = "message-text";
+        text.textContent = message.text;
+
+        meta.append(author, time);
+        body.append(meta, text);
+        row.append(avatar, body);
+        messages.append(row);
+      });
+
+      document.getElementById("currentTopic").textContent = currentTopic;
+      messageInput.placeholder = "Message #" + currentTopic;
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function selectGroup(group) {
+      currentGroup = group;
+      currentTopic = Object.keys(groups[group])[0];
+      renderGroups();
+      renderTopics();
+      renderMessages();
+      document.getElementById("sidebar").classList.remove("open");
+    }
+
+    function selectTopic(topic) {
+      currentTopic = topic;
+      renderTopics();
+      renderMessages();
+    }
+
+    document.getElementById("createGroup").addEventListener("click", () => {
+      const name = prompt("Name your new group:");
+      if (!name || !name.trim()) return;
+
+      const group = name.trim();
+      if (groups[group]) {
+        alert("That group already exists.");
+        return;
+      }
+
+      groups[group] = { general: [] };
+      selectGroup(group);
+    });
+
+    document.getElementById("addServer").addEventListener("click", () => {
+      document.getElementById("createGroup").click();
+    });
+
+    document.getElementById("createTopic").addEventListener("click", () => {
+      const name = prompt("Name your discussion topic:");
+      if (!name || !name.trim()) return;
+
+      const topic = name.trim().toLowerCase().replace(/\s+/g, "-");
+
+      if (groups[currentGroup][topic]) {
+        alert("That topic already exists.");
+        return;
+      }
+
+      groups[currentGroup][topic] = [];
+      currentTopic = topic;
+      renderTopics();
+      renderMessages();
+    });
+
+    document.getElementById("messageForm").addEventListener("submit", event => {
+      event.preventDefault();
+
+      const text = messageInput.value.trim();
+      if (!text) return;
+
+      groups[currentGroup][currentTopic].push({
+        author: "Guest User",
+        text,
+        time: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit"
+        })
+      });
+
+      messageInput.value = "";
+      renderMessages();
+    });
+
+    document.getElementById("mobileMenu").addEventListener("click", () => {
+      document.getElementById("sidebar").classList.toggle("open");
+    });
+
+    renderGroups();
+    renderTopics();
+    renderMessages();
+  </script>
+</body>
+</html>
