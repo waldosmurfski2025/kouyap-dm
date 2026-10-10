@@ -1,12 +1,23 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="{{ '/css/style.css' | url }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }}</title>
+    <title>{{ title or "Kouyap-DM" }}</title>
+    <link rel="stylesheet" href="{{ '/css/style.css' | url }}">
 </head>
 <body>
-    {{ content | safe }}
+    {% include "header.njk" %}
+
+    <div class="app-layout">
+        {% include "sidebar.njk" %}
+
+        <main class="main-content">
+            {{ content | safe }}
+        </main>
+    </div>
+
+    {% include "footer.njk" %}
 </body>
 </html>
